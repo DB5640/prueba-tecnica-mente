@@ -1,90 +1,35 @@
-###################################################
-# Stage: base
-# 
-# This base stage ensures all other stages are using the same base image
-# and provides common configuration for all stages, such as the working dir.
-###################################################
-FROM node:22 AS base
-WORKDIR /usr/local/app
-
-################## CLIENT STAGES ##################
-
-###################################################
-# Stage: client-base
-#
-# This stage is used as the base for the client-dev and client-build stages,
-# since there are common steps needed for each.
-###################################################
-FROM base AS client-base
-COPY client/package.json client/package-lock.json ./
+# Build React frontend
+FROM node:22-alpine AS frontend-build
+WORKDIR /app
+COPY frontend/package*.json ./
 RUN npm install
-COPY client/.eslintrc.cjs client/index.html client/vite.config.js ./
-COPY client/public ./public
-COPY client/src ./src
-
-###################################################
-# Stage: client-dev
-# 
-# This stage is used for development of the client application. It sets 
-# the default command to start the Vite development server.
-###################################################
-FROM client-base AS client-dev
-CMD ["npm", "run", "dev"]
-
-###################################################
-# Stage: client-build
-#
-# This stage builds the client application, producing static HTML, CSS, and
-# JS files that can be served by the backend.
-###################################################
-FROM client-base AS client-build
+COPY frontend/ ./
 RUN npm run build
 
-
-
-
-###################################################
-################  BACKEND STAGES  #################
-###################################################
-
-###################################################
-# Stage: backend-base
-#
-# This stage is used as the base for the backend-dev and test stages, since
-# there are common steps needed for each.
-###################################################
-FROM base AS backend-dev
-COPY backend/package.json backend/package-lock.json ./
-RUN npm install
-COPY backend/spec ./spec
+# Build Spring Boot backend
+FROM maven:3.9.9-eclipse-temurin-21-alpine AS backend-build
+WORKDIR /app
+COPY backend/pom.xml ./
+RUN mvn dependency:go-offline -B
 COPY backend/src ./src
-CMD ["npm", "run", "dev"]
+RUN mvn clean package -DskipTests
 
-###################################################
-# Stage: test
-#
-# This stage runs the tests on the backend. This is split into a separate
-# stage to allow the final image to not have the test dependencies or test
-# cases.
-###################################################
-FROM backend-dev AS test
-RUN npm run test
 
-###################################################
-# Stage: final
-#
-# This stage is intended to be the final "production" image. It sets up the
-# backend and copies the built client application from the client-build stage.
-#
-# It pulls the package.json and package-lock.json from the test stage to ensure that
-# the tests run (without this, the test stage would simply be skipped).
-###################################################
-FROM base AS final
-ENV NODE_ENV=production
-COPY --from=test /usr/local/app/package.json /usr/local/app/package-lock.json ./
-RUN npm ci --production && \
-    npm cache clean --force
-COPY backend/src ./src
-COPY --from=client-build /usr/local/app/dist ./src/static
-EXPOSE 3000
-CMD ["node", "src/index.js"]
+# Production stage
+FROM eclipse-temurin:21-jre-alpine AS production
+WORKDIR /app
+
+# Environment variables
+ENV SPRING_PROFILES_ACTIVE=prod
+ENV JAVA_OPTS="-Xms256m -Xmx512m -XX:+UseG1GC"
+
+# Copy JAR and static files
+COPY --from=backend-build /app/target/*.jar app.jar
+COPY --from=frontend-build /app/dist ./static
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8080/actuator/health || exit 1
+
+CMD ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
