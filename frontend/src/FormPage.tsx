@@ -54,10 +54,8 @@ export const FormPage = () => {
 
   type FormData = z.infer<typeof formSchema>;
   return (
-    <div className="flex flex-col w-screen h-screen items-center p-4">
-      <CardWrapper>
-        <FormularioCrearEmpresa onSubmit={onSubmit} state={mutation.status} />
-      </CardWrapper>
-    </div>
+    <CardWrapper>
+      <FormularioCrearEmpresa onSubmit={onSubmit} state={mutation.status} />
+    </CardWrapper>
   );
 };

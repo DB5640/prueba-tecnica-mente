@@ -9,3 +9,11 @@ export const postEmpresa = async (values: z.infer<typeof formSchema>) => {
   }
   return response.data
 }
+
+export const fetchEmpresas = async () => {
+  const response = await axios.get("http://localhost:8080/empresas")
+  if (response.status !== 200) {
+    throw new Error("Error al obtener las empresas")
+  }
+  return response.data
+}

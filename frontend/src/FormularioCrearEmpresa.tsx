@@ -1,10 +1,10 @@
-import { zodResolver } from "@hookform/resolvers/zod";
+// import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { formSchema } from "@/schemas/empresaFormShema";
 
-type FormValues = z.infer<typeof formSchema>;
+export type FormValues = z.infer<typeof formSchema>;
 
 interface FormularioCrearEmpresaProps {
   onSubmit: (values: FormValues) => void;
@@ -31,10 +31,10 @@ export function FormularioCrearEmpresa({
   state,
 }: FormularioCrearEmpresaProps) {
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    // resolver: zodResolver(formSchema),
     defaultValues: {
       name: "prueba 4",
-      nit: "1232134324",
+      nit: 1232134324,
       address: "Calle 12 #12-12 apartamento 12...",
       phone: 6543321,
     },
@@ -93,7 +93,7 @@ export function FormularioCrearEmpresa({
             <FormItem>
               <FormLabel>NIT</FormLabel>
               <FormControl>
-                <Input placeholder="NIT" {...field} />
+                <Input type="number" placeholder="NIT" {...field} />
               </FormControl>
               <FormDescription>NIT sin signo de verificación.</FormDescription>
               <FormMessage />
@@ -123,7 +123,7 @@ export function FormularioCrearEmpresa({
             <FormItem>
               <FormLabel>Teléfono</FormLabel>
               <FormControl>
-                <Input placeholder="Teléfono" {...field} />
+                <Input type="number" placeholder="Teléfono" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

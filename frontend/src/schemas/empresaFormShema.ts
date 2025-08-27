@@ -1,5 +1,7 @@
 import z from "zod";
 
+export type EmpresaFormSchema = z.infer<typeof formSchema>;
+
 export const formSchema = z.object({
     name: z.string().min(1, {
         message: "El nombre de la empresa es obligatorio.",
