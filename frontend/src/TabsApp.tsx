@@ -24,7 +24,7 @@ export function TabsApp() {
           <TabsTrigger value="table">Tabla</TabsTrigger>
         </TabsList>
         <TabsContent value="form">
-          <FormPage />
+          <FormPage setTab={setTab} />
         </TabsContent>
         <TabsContent value="table">
           <Card>

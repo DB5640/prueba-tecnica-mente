@@ -42,21 +42,21 @@ class CompanyServiceH2Test {
     @BeforeEach
     void setUp() {
         companyRepository.deleteAll();
+        companyRepository.deleteAllInBatch();
+        companyRepository.flush(); 
+        entityManager.clear();
         companyDTO = new CompanyDTO();
         companyDTO.setName("Test Company");
         companyDTO.setNit("123456789");
         companyDTO.setAddress("Test Address");
         companyDTO.setPhone("555-1234");
         
-        entityManager.clear();
     }
 
     @Test
     void createCompany_Success() {
-        // When
         CompanyDTO result = companyService.createCompany(companyDTO);
 
-        // Then
         assertNotNull(result);
         assertNotNull(result.getId());
         assertEquals(companyDTO.getName(), result.getName());
@@ -69,13 +69,11 @@ class CompanyServiceH2Test {
 
     @Test
     void createCompany_ThrowsException_WhenNitExists() {
-        // Given - crear empresa primero
         companyService.createCompany(companyDTO);
 
-        // When & Then
         CompanyDTO duplicateDTO = new CompanyDTO();
         duplicateDTO.setName("Another Company");
-        duplicateDTO.setNit("123456789"); // mismo NIT
+        duplicateDTO.setNit("123456789");
         duplicateDTO.setAddress("Another Address");
         duplicateDTO.setPhone("555-9999");
 
@@ -85,12 +83,11 @@ class CompanyServiceH2Test {
         );
         
         assertEquals("El NIT ya está registrado.", exception.getMessage());
-        assertEquals(1, companyRepository.count()); // solo debe haber una empresa
+        assertEquals(1, companyRepository.count());
     }
 
     @Test
     void getAllCompanies_Success() {
-        // Given
         companyService.createCompany(companyDTO);
         
         CompanyDTO company2DTO = new CompanyDTO();
@@ -101,10 +98,8 @@ class CompanyServiceH2Test {
         
         companyService.createCompany(company2DTO);
 
-        // When
         List<CompanyDTO> result = companyService.getAllCompanies();
 
-        // Then
         assertEquals(2, result.size());
         assertTrue(result.stream().anyMatch(c -> c.getName().equals("Test Company")));
         assertTrue(result.stream().anyMatch(c -> c.getName().equals("Company 2")));
@@ -112,10 +107,8 @@ class CompanyServiceH2Test {
 
     @Test
     void getAllCompanies_ReturnsEmptyList() {
-        // When
         List<CompanyDTO> result = companyService.getAllCompanies();
 
-        // Then
         assertTrue(result.isEmpty());
         assertEquals(0, companyRepository.count());
     }

@@ -1,23 +1,23 @@
 import { CardWrapper } from "./CardWrapper";
 import { FormularioCrearEmpresa } from "./FormularioCrearEmpresa";
-import { z } from "zod";
-import { formSchema } from "./schemas/empresaFormShema";
+import { type EmpresaFormSchema } from "./schemas/empresaFormShema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { postEmpresa } from "./apiConection";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
 
-export const FormPage = () => {
+export const FormPage = ({ setTab }: { setTab: (tab: string) => void }) => {
   const queryClient = useQueryClient();
   const mutation = useMutation<
-    z.infer<typeof formSchema>,
+    EmpresaFormSchema,
     AxiosError,
-    z.infer<typeof formSchema>
+    EmpresaFormSchema
   >({
     mutationFn: postEmpresa,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["empresas"] });
       toast.success("Empresa creada exitosamente");
+      setTab("table");
     },
     onError: (err: AxiosError) => {
       console.error("Ha ocurrido un error:", err.message);
@@ -43,16 +43,10 @@ export const FormPage = () => {
       }
     },
   });
-  const onSubmit = (values: FormData) => {
-    const formData = {
-      ...values,
-      nit: Number(values.nit),
-      phone: values.phone ? Number(values.phone) : undefined,
-    };
-    mutation.mutate(formData);
+  const onSubmit = (values: EmpresaFormSchema) => {
+    mutation.mutate(values);
   };
 
-  type FormData = z.infer<typeof formSchema>;
   return (
     <CardWrapper>
       <FormularioCrearEmpresa onSubmit={onSubmit} state={mutation.status} />

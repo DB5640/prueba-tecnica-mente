@@ -1,13 +1,11 @@
-// import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { formSchema } from "@/schemas/empresaFormShema";
-
-export type FormValues = z.infer<typeof formSchema>;
+import { formSchema, type EmpresaFormSchema } from "@/schemas/empresaFormShema";
+import type { SubmitHandler } from "react-hook-form";
 
 interface FormularioCrearEmpresaProps {
-  onSubmit: (values: FormValues) => void;
+  onSubmit: SubmitHandler<EmpresaFormSchema>;
   state: "error" | "idle" | "pending" | "success";
 }
 import {
@@ -30,21 +28,22 @@ export function FormularioCrearEmpresa({
   onSubmit,
   state,
 }: FormularioCrearEmpresaProps) {
-  const form = useForm<FormValues>({
-    // resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "prueba 4",
-      nit: 1232134324,
-      address: "Calle 12 #12-12 apartamento 12...",
-      phone: 6543321,
-    },
-  });
   const [variant, setVariant] = useState<
     "default" | "outline" | "destructive" | "link" | "secondary" | "ghost"
   >("default");
   const [contenidoButton, setContenidoButton] = useState<string | ReactNode>(
     "Continuar"
   );
+
+  const form = useForm<EmpresaFormSchema>({
+    resolver: zodResolver(formSchema),
+    /* defaultValues: {
+      name: "prueba 4",
+      nit: 1232134324,
+      address: "Calle 12 #12-12 apartamento 12...",
+      phone: 6543321,
+    }, */
+  });
 
   useEffect(() => {
     setVariant(
@@ -80,7 +79,11 @@ export function FormularioCrearEmpresa({
             <FormItem>
               <FormLabel>Nombre de la empresa</FormLabel>
               <FormControl>
-                <Input placeholder="Nombre de la empresa" {...field} />
+                <Input
+                  placeholder="Nombre de la empresa"
+                  {...field}
+                  value={field.value}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -93,7 +96,14 @@ export function FormularioCrearEmpresa({
             <FormItem>
               <FormLabel>NIT</FormLabel>
               <FormControl>
-                <Input type="number" placeholder="NIT" {...field} />
+                <Input
+                  placeholder="NIT"
+                  {...field}
+                  value={field.value || ""}
+                  onChange={(e) =>
+                    field.onChange(e.target.value ? Number(e.target.value) : "")
+                  }
+                />
               </FormControl>
               <FormDescription>NIT sin signo de verificación.</FormDescription>
               <FormMessage />
@@ -110,6 +120,7 @@ export function FormularioCrearEmpresa({
                 <Input
                   placeholder="Calle 12 #12-12 apartamento 12..."
                   {...field}
+                  value={field.value}
                 />
               </FormControl>
               <FormMessage />
@@ -123,7 +134,14 @@ export function FormularioCrearEmpresa({
             <FormItem>
               <FormLabel>Teléfono</FormLabel>
               <FormControl>
-                <Input type="number" placeholder="Teléfono" {...field} />
+                <Input
+                  placeholder="3001234567"
+                  {...field}
+                  value={field.value || ""}
+                  onChange={(e) =>
+                    field.onChange(e.target.value ? Number(e.target.value) : "")
+                  }
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
